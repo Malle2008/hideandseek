@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require("fs")
+app.use(express.static("public"))
 
 
 function check_user(username){
@@ -146,10 +147,7 @@ app.use(bodyParser.json())
 app.use(cors())
 
 app.get("/", (req, res) => {
-	res.status(200).send({
-		working: "yes it's working",
-		how_well: "80%"
-	})
+   res.send("<h1>Working!</h1>")
 })
 
 
