@@ -268,7 +268,7 @@ app.post("/get_game_code/:ip", (req, res) => {
 })
 
 
-app.listen(PORT, () => {
+app.listen(process.env.PORT || PORT, () => {
 	console.log("server started at port " + PORT)
 })
 
