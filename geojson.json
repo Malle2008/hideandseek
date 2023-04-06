@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"username":"","iconSize":[40,40]},"geometry":{"type":"Point","coordinates":[0,0]}},{"type":"Feature","properties":{"message":"MALTE","iconSize":[40,40]},"geometry":{"type":"Point","coordinates":[69,420]}}],"game_settings":{"time":0,"loc_reveal":0,"zone_size":0,"zone_shrink":0}}
