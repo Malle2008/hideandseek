@@ -1,12 +1,11 @@
 const express = require('express');
 const fs = require("fs")
-app.use(express.static("public"))
 
 
 function check_user(username){
    var users = fs.readFileSync('geojson.json', 'utf8');
 	users = JSON.parse(users)
-
+   
 	for (var i in users.features) {
       if (users.features[i].properties.message == username){
          return true;
@@ -20,9 +19,9 @@ function check_user(username){
 
 function add_user(username, lng, lat) {
    console.log("add_user function")
-
+   
 	index = fs.readFileSync("index.txt", {encoding:"utf-8"})
-
+   
 	var users = fs.readFileSync(`games/game${parseInt(index)}.json`, 'utf8');
    //users = JSON.parse(JSON.stringify(users))
 	users = JSON.parse(users)
@@ -39,20 +38,20 @@ function add_user(username, lng, lat) {
          "coordinates": [lng, lat]
       }
 	}
-
+   
 	var count = 0;
 	for (var i in users.features) {
-		if (users.features.hasOwnProperty(i)) count++;
+      if (users.features.hasOwnProperty(i)) count++;
 	}
    console.log(count)
 
-
+   
 	for (var i = 0; i < count; i++) {
-		if (users.features[i].properties.username != username) {
-			users.features.push(new_user)
+      if (users.features[i].properties.username != username) {
+         users.features.push(new_user)
          console.log(users.features)
 			fs.writeFile(`games/game${parseInt(index)}.json`, JSON.stringify(users), (err) => {
-				if (err) throw err;
+            if (err) throw err;
 			})
 			console.log("added new user")
          break;
@@ -78,21 +77,21 @@ function update_geojson(username, lng, lat){
    }
    console.log(feature)
 
-
+   
    var users = fs.readFileSync('geojson.json', 'utf8');
 	users = JSON.parse(users)
-
+   
 	var count = 0;
 	for (var i in users.features) {
-		if (users.features.hasOwnProperty(i)) count++;
+      if (users.features.hasOwnProperty(i)) count++;
 	}
-
+   
 	for (var i = 0; i < count; i++) {
-		if (users.features[i].properties.message == username) {
-			users.features[i].geometry.coordinates = [lng, lat]
-
+      if (users.features[i].properties.message == username) {
+         users.features[i].geometry.coordinates = [lng, lat]
+         
 			fs.writeFile("geojson.json", JSON.stringify(users), (err) => {
-				if (err) throw err;
+            if (err) throw err;
 			})
 			
 			break;
@@ -101,25 +100,25 @@ function update_geojson(username, lng, lat){
          add_user(username, lng, lat)
       }
 	}
-
+   
 }
 
 user_base = {
    "type":"Feature",
    "properties":{
-       "username":"",
-       "iconSize":[40,40]
+      "username":"",
+      "iconSize":[40,40]
    },
    "geometry":{
-       "type":"Point",
-       "coordinates":[0, 0]
+      "type":"Point",
+      "coordinates":[0, 0]
    }
 }
 
 game_boilerpalte = {
    "type":"FeatureCollection",
    "features":[
-
+      
    ],
    "game_settings": {
        "time": 0,
@@ -129,12 +128,12 @@ game_boilerpalte = {
        "game_name": 0,
        "game_code": 0,
        "starter_ip": 0
+      }
    }
-}
-
-
-
-
+   
+   
+   
+   
 
 const app = express();
 const PORT = 3000;
@@ -143,6 +142,7 @@ const cors = require("cors");
 
 app.use(express.json())
 app.use(bodyParser.urlencoded({extended: false}))
+app.use(express.static("public"))
 app.use(bodyParser.json())
 app.use(cors())
 
@@ -161,7 +161,7 @@ function find_game(game_code) {
       }else{
          //continue
       }
-
+      
    }
    return -1;
 }
