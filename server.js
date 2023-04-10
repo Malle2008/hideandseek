@@ -107,6 +107,7 @@ user_base = {
    "type":"Feature",
    "properties":{
       "username":"",
+      "ip": 0,
       "iconSize":[40,40]
    },
    "geometry":{
@@ -154,20 +155,20 @@ app.get("/", (req, res) => {
 function find_game(game_code) {
    index = fs.readFileSync("index.txt", {encoding:"utf-8"})
    for (i = 0; i <= index; i++) {
-      if (JSON.parse(fs.readFileSync(`games/game${parseInt(i)+1}.json`, "utf-8", (err) => {
-         if (err) {console.log(err)}
-      })).game_settings.game_code == game_code) {
-         return parseInt(i)+1;
-      }else{
-         //continue
+      try{
+         if (JSON.parse(fs.readFileSync(`games/game${parseInt(i)+1}.json`, "utf-8", (err) => {
+            if (err) {console.log(err)}
+         })).game_settings.game_code == game_code) {
+            return parseInt(i)+1;
+         }
+      }catch{
+         console.log("NO FILE FOUND OR JSON INVALID")
       }
-      
    }
    return -1;
 }
 
-console.log(find_game(127667))
-console.log(find_game(75887))
+
 
 app.post("/join_game/", (req, res) => {
    // add new user to game file with the right game code
@@ -176,24 +177,56 @@ app.post("/join_game/", (req, res) => {
 
    
    if(find_game(game_code) < 0) {
-      res.send(200).send("No game with that code found")
+      res.status(200).send("No game with that code found")
       console.log("no game found")
    }else {
       console.log("game found")      
       find_game(game_code)
       user_base.properties.username = req.body.username
-      user_base.geometry.lng = req.body.lng
-      user_base.geometry.lat = req.body.lat
+      user_base.geometry.coordinates[1] = req.body.lng
+      user_base.geometry.coordinates[0] = req.body.lat
+      user_base.properties.ip = req.body.ip
+
+      console.log("user_ip: ", user_base.properties.ip)
 
       game = fs.readFileSync(`games/game${parseInt(find_game(game_code))}.json`, {encoding: "utf-8"})
       game = JSON.parse(game)
       game.features.push(user_base)
 
+      console.log(req.body)
+
       fs.writeFileSync(`games/game${parseInt(find_game(game_code))}.json`, JSON.stringify(game))
-      res.status(200).send()
+      res.status(200).send("Joined game")
    }
 })
 
+
+
+app.post("/get_user", (req, res) => {
+   //get ip
+   console.log("get_user")
+   ip = req.body.ip
+   console.log(ip)
+   index = fs.readFileSync("index.txt", {encoding:"utf-8"})
+
+   for (i = 1; i <= index; i++) {
+      game_data = fs.readFileSync(`games/game${parseInt(i)}.json`, "utf-8", (err) => {
+         if (err) {console.log(err)}
+      })
+      game_data = JSON.parse(game_data)
+      for (j = 0; j < game_data.features.length; j++) {
+         console.log("---------------------------------")
+         console.log("j: " + j)
+         if(game_data.features[j].properties.ip == ip) {
+            console.log("same ip as: " + game_data.features[j].properties.username)
+            
+            res.status(200).send(game_data.features[j])
+            break;
+         }
+      }
+      
+   }
+})
 
 app.post("/new_game", (req, res) => {
    // create a gameX.json file to store all the locations and settings 
@@ -204,9 +237,9 @@ app.post("/new_game", (req, res) => {
    zone_size = req.body.zone_size
    zone_shrink = req.body.zone_shrink
    game_name = req.body.game_name
+   starter_ip = req.body.game_starter_ip
    new_game_code = Math.floor(Math.random() * 1000000)
 
-   starter_ip = req.body.game_starter_ip
 
 	index = fs.readFileSync("index.txt", {encoding:"utf-8"})
 
@@ -214,10 +247,10 @@ app.post("/new_game", (req, res) => {
 		if (err) {
 			console.log(err)
 		}else{
-			/*fs.writeFileSync("index.txt", (parseInt(index) +1).toString(), (err) => {
+			fs.writeFileSync("index.txt", (parseInt(index) +1).toString(), (err) => {
 				console.log(err)
-			})*/
-
+         })
+		
 			game_boilerpalte.game_settings.time = time
 			game_boilerpalte.game_settings.loc_reveal = loc_reveal
 			game_boilerpalte.game_settings.zone_size = zone_size
@@ -231,8 +264,9 @@ app.post("/new_game", (req, res) => {
             console.log(err)
          })
 			console.log('Saved!');
-		}
-	  });
+	  
+      }
+   });
 
      res.status(200).send({game_code: new_game_code})
 
@@ -240,22 +274,30 @@ app.post("/new_game", (req, res) => {
 
 app.post("/start_game/:game_code/:ip", (req, res) => {
    console.log("started game")
-   console.log(req.params.game_code)
+   //console.log(req.params.game_code)
 
    //find game with same game code and start updating the positions and geojson 
 })
 
 
 app.post("/get_game_code/:ip", (req, res) => {
-   console.log("ip: " + req.params.ip)
-
    index = fs.readFileSync("index.txt", {encoding:"utf-8"})
 
-   game_data = fs.readFileSync(`games/game${parseInt(index)+1}.json`, "utf-8", (err) => {
+   game_data = fs.readFileSync(`games/game${parseInt(index)}.json`, "utf-8", (err) => {
       if (err) {console.log(err)}
    })
+/*
+   fs.writeFile(`games/game${parseInt(index)+1}.json`, "", (err) => {
+      console.log(err)
+   })
+*/
+
    game_data = JSON.parse(game_data)
+
+   console.log("ip: " + req.params.ip)
    starter_ip = game_data.game_settings.starter_ip
+   console.log("starter ip: " + starter_ip)
+
 
    if (starter_ip == req.params.ip){
       res.status(200).send(JSON.stringify(game_data.game_settings.game_code))
